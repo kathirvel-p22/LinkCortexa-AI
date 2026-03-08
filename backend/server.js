@@ -6,6 +6,7 @@ const rateLimit = require('express-rate-limit');
 const mongoose = require('mongoose');
 const http = require('http');
 const { Server } = require('socket.io');
+const realtimeService = require('./services/realtimeService');
 require('dotenv').config();
 
 const app = express();
@@ -57,6 +58,9 @@ io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
   socket.on('disconnect', () => console.log('Client disconnected:', socket.id));
 });
+
+// Initialize real-time service
+realtimeService.initialize(io);
 
 // Export io for use in routes
 app.set('io', io);

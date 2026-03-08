@@ -3,9 +3,11 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Scanner from './pages/Scanner';
+import AdvancedScanner from './pages/AdvancedScanner';
 import Threats from './pages/Threats';
 import BlockchainLogs from './pages/BlockchainLogs';
 import Analytics from './pages/Analytics';
+import Profile from './pages/Profile';
 import Layout from './components/Layout';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AlertProvider } from './context/AlertContext';
@@ -26,9 +28,11 @@ export default function App() {
             <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
               <Route index element={<Dashboard />} />
               <Route path="scanner" element={<Scanner />} />
+              <Route path="advanced-scanner" element={<AdvancedScanner />} />
               <Route path="threats" element={<Threats />} />
               <Route path="blockchain" element={<BlockchainLogs />} />
               <Route path="analytics" element={<Analytics />} />
+              <Route path="profile" element={<Profile />} />
             </Route>
           </Routes>
         </BrowserRouter>

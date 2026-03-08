@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { analyzeURL } = require('../services/threatAnalysis');
+const advancedThreatAnalysis = require('../services/advancedThreatAnalysis');
+const realtimeService = require('../services/realtimeService');
 const { logToBlockchain } = require('../services/blockchain');
 
 // In-memory threat store for demo
@@ -29,7 +31,7 @@ if (threatStore.length === 0) threatStore = generateMockHistory();
 
 router.post('/url', async (req, res) => {
   try {
-    const { url, source = 'api' } = req.body;
+    const { url, source = 'api', advanced = true } = req.body;
     if (!url) return res.status(400).json({ success: false, message: 'URL is required' });
 
     // Basic URL validation
@@ -41,7 +43,11 @@ router.post('/url', async (req, res) => {
     }
 
     scanCount++;
-    const result = await analyzeURL(validURL.href);
+    
+    // Use advanced analysis if requested
+    const result = advanced 
+      ? await advancedThreatAnalysis.analyzeURL(validURL.href)
+      : await analyzeURL(validURL.href);
 
     // Log to blockchain
     const blockchainResult = await logToBlockchain(result);
@@ -58,13 +64,18 @@ router.post('/url', async (req, res) => {
     threatStore.unshift(threat);
     if (threatStore.length > 500) threatStore = threatStore.slice(0, 500);
 
+    // Increment scan count in realtime service
+    realtimeService.incrementScanCount();
+
     // Emit real-time alert if threat
-    if (req.app.get('io') && result.riskScore >= 40) {
-      req.app.get('io').emit('threat_detected', {
+    if (result.riskScore >= 40) {
+      realtimeService.broadcastThreat({
         url: result.url,
-        domain: result.domain,
+        domain: result.details?.domain || validURL.hostname,
         riskScore: result.riskScore,
         status: result.status,
+        severity: result.severity,
+        threats: result.threats,
         timestamp: new Date()
       });
     }

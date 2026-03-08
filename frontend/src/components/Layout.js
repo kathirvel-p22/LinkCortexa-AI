@@ -64,15 +64,26 @@ export default function Layout() {
         <nav style={{flex:1,padding:'16px 10px',display:'flex',flexDirection:'column',gap:4,overflowY:'auto'}}>
           <NavItem to="/" icon="◈" label="Dashboard" />
           <NavItem to="/scanner" icon="⬡" label="URL Scanner" />
+          <NavItem to="/advanced-scanner" icon="🚀" label="Advanced Scanner" />
           <NavItem to="/threats" icon="⚠" label="Threats" />
           <NavItem to="/analytics" icon="◉" label="Analytics" />
           <NavItem to="/blockchain" icon="⬡" label="Blockchain Logs" />
+          <NavItem to="/profile" icon="👤" label="Profile" />
         </nav>
 
         {/* User */}
         <div style={{padding:'16px 10px',borderTop:'1px solid var(--border)'}}>
           {!collapsed && (
-            <div style={{padding:'12px',background:'var(--bg-card)',borderRadius:10,border:'1px solid var(--border)',marginBottom:8}}>
+            <div 
+              onClick={() => navigate('/profile')}
+              style={{
+                padding:'12px',background:'var(--bg-card)',borderRadius:10,
+                border:'1px solid var(--border)',marginBottom:8,
+                cursor:'pointer',transition:'all 0.2s'
+              }}
+              onMouseEnter={e => e.currentTarget.style.borderColor='var(--cyan)'}
+              onMouseLeave={e => e.currentTarget.style.borderColor='var(--border)'}
+            >
               <div style={{fontSize:13,fontWeight:700,color:'var(--text-primary)'}}>{user?.name}</div>
               <div style={{fontSize:11,color:'var(--text-dim)',fontFamily:'var(--font-mono)'}}>{user?.role?.toUpperCase()}</div>
             </div>
