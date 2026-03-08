@@ -13,6 +13,8 @@ export default function AdvancedScanner() {
   const [result, setResult] = useState(null);
   const [history, setHistory] = useState([]);
   const [socket, setSocket] = useState(null);
+  const [autoScan, setAutoScan] = useState(true);
+  const [clipboardMonitoring, setClipboardMonitoring] = useState(false);
 
   useEffect(() => {
     // Connect to WebSocket for real-time updates
@@ -27,8 +29,38 @@ export default function AdvancedScanner() {
     // Load scan history
     loadHistory();
 
+    // Check for URL in query params (for automatic scanning)
+    const params = new URLSearchParams(window.location.search);
+    const urlParam = params.get('url');
+    if (urlParam && autoScan) {
+      setUrl(urlParam);
+      setTimeout(() => scanURL(urlParam), 500);
+    }
+
     return () => newSocket.disconnect();
   }, []);
+
+  // Monitor clipboard for URLs (optional feature)
+  useEffect(() => {
+    if (!clipboardMonitoring) return;
+
+    const checkClipboard = async () => {
+      try {
+        const text = await navigator.clipboard.readText();
+        if (text && isValidURL(text) && text !== url) {
+          setUrl(text);
+          if (autoScan) {
+            scanURL(text);
+          }
+        }
+      } catch (err) {
+        // Clipboard access denied
+      }
+    };
+
+    const interval = setInterval(checkClipboard, 2000);
+    return () => clearInterval(interval);
+  }, [clipboardMonitoring, url, autoScan]);
 
   const loadHistory = async () => {
     try {
@@ -39,8 +71,17 @@ export default function AdvancedScanner() {
     }
   };
 
-  const scanURL = async () => {
-    if (!url.trim()) return;
+  const isValidURL = (string) => {
+    try {
+      new URL(string.startsWith('http') ? string : `https://${string}`);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const scanURL = async (urlToScan = url) => {
+    if (!urlToScan.trim()) return;
 
     setScanning(true);
     setProgress(0);
@@ -49,7 +90,7 @@ export default function AdvancedScanner() {
     try {
       // Emit scan start to socket
       if (socket) {
-        socket.emit('scan_url', { url, userId: user?.id });
+        socket.emit('scan_url', { url: urlToScan, userId: user?.id });
       }
 
       // Simulate progress
@@ -57,11 +98,12 @@ export default function AdvancedScanner() {
         setProgress(prev => Math.min(prev + 10, 90));
       }, 200);
 
-      // Perform scan with advanced analysis
+      // Perform scan with advanced analysis + AI
       const res = await axios.post(`${API}/analyze/url`, {
-        url,
+        url: urlToScan,
         source: 'dashboard',
-        advanced: true
+        advanced: true,
+        useAI: true
       });
 
       clearInterval(progressInterval);
@@ -74,7 +116,7 @@ export default function AdvancedScanner() {
       if (socket) {
         socket.emit('user_activity', {
           type: 'url_scanned',
-          url,
+          url: urlToScan,
           riskScore: res.data.data.riskScore
         });
       }
@@ -102,26 +144,46 @@ export default function AdvancedScanner() {
       {/* Header */}
       <div>
         <h1 style={{ fontSize: 28, fontWeight: 800, marginBottom: 4 }}>
-          Advanced URL Scanner
+          AI-Powered URL Scanner
         </h1>
         <p style={{ color: 'var(--text-dim)', fontFamily: 'var(--font-mono)', fontSize: 13 }}>
-          REAL-TIME THREAT DETECTION WITH AI ANALYSIS
+          REAL-TIME THREAT DETECTION WITH ADVANCED AI ANALYSIS
         </p>
       </div>
 
       {/* Scanner Card */}
       <div className="card" style={{ padding: 32 }}>
         <div style={{ marginBottom: 24 }}>
-          <label style={{
-            fontSize: 12,
-            color: 'var(--text-dim)',
-            fontFamily: 'var(--font-mono)',
-            letterSpacing: 1,
-            display: 'block',
-            marginBottom: 8
-          }}>
-            ENTER URL TO SCAN
-          </label>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <label style={{
+              fontSize: 12,
+              color: 'var(--text-dim)',
+              fontFamily: 'var(--font-mono)',
+              letterSpacing: 1
+            }}>
+              ENTER URL TO SCAN
+            </label>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={autoScan}
+                  onChange={(e) => setAutoScan(e.target.checked)}
+                  style={{ cursor: 'pointer' }}
+                />
+                Auto-scan
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-secondary)', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={clipboardMonitoring}
+                  onChange={(e) => setClipboardMonitoring(e.target.checked)}
+                  style={{ cursor: 'pointer' }}
+                />
+                Monitor clipboard
+              </label>
+            </div>
+          </div>
           <div style={{ display: 'flex', gap: 12 }}>
             <input
               type="text"
@@ -184,17 +246,18 @@ export default function AdvancedScanner() {
             marginBottom: 10,
             fontWeight: 700
           }}>
-            QUICK TEST URLS
+            QUICK TEST URLS | AI + ADVANCED ANALYSIS
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {[
               { label: 'Safe', url: 'https://google.com', color: 'var(--green)' },
               { label: 'Suspicious', url: 'https://paypal-secure-login.xyz', color: 'var(--yellow)' },
-              { label: 'Phishing', url: 'https://amazon-verify.tk', color: 'var(--red)' }
+              { label: 'Phishing', url: 'https://amazon-verify.tk', color: 'var(--red)' },
+              { label: 'Test IP', url: 'http://192.168.1.1/login', color: 'var(--red)' }
             ].map(test => (
               <button
                 key={test.url}
-                onClick={() => setUrl(test.url)}
+                onClick={() => { setUrl(test.url); if (autoScan) scanURL(test.url); }}
                 disabled={scanning}
                 style={{
                   padding: '6px 12px',
@@ -213,6 +276,17 @@ export default function AdvancedScanner() {
                 {test.label}
               </button>
             ))}
+          </div>
+          <div style={{
+            marginTop: 12,
+            padding: '8px 12px',
+            background: 'rgba(168,85,247,0.1)',
+            border: '1px solid rgba(168,85,247,0.2)',
+            borderRadius: 6,
+            fontSize: 11,
+            color: 'var(--purple)'
+          }}>
+            💡 Tip: Enable "Auto-scan" to automatically analyze URLs when you paste them
           </div>
         </div>
       </div>
@@ -333,6 +407,29 @@ function ThreatAnalysisResult({ result }) {
         <span className={`badge badge-${result.status}`} style={{ fontSize: 13 }}>
           {result.severity?.toUpperCase()} SEVERITY
         </span>
+        
+        {/* AI Score Display */}
+        {result.aiScore && (
+          <div style={{ marginTop: 16, padding: '12px 16px', background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.3)', borderRadius: 10 }}>
+            <div style={{ fontSize: 12, color: 'var(--purple)', fontFamily: 'var(--font-mono)', marginBottom: 6 }}>
+              AI ANALYSIS
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 24 }}>
+              <div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--purple)' }}>
+                  {result.aiScore}
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>AI Score</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--cyan)' }}>
+                  {result.aiConfidence}%
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--text-dim)' }}>Confidence</div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Detection Methods */}

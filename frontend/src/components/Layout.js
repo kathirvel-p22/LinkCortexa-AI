@@ -63,8 +63,7 @@ export default function Layout() {
         {/* Nav */}
         <nav style={{flex:1,padding:'16px 10px',display:'flex',flexDirection:'column',gap:4,overflowY:'auto'}}>
           <NavItem to="/" icon="◈" label="Dashboard" />
-          <NavItem to="/scanner" icon="⬡" label="URL Scanner" />
-          <NavItem to="/advanced-scanner" icon="🚀" label="Advanced Scanner" />
+          <NavItem to="/scanner" icon="🚀" label="URL Scanner" />
           <NavItem to="/threats" icon="⚠" label="Threats" />
           <NavItem to="/analytics" icon="◉" label="Analytics" />
           <NavItem to="/blockchain" icon="⬡" label="Blockchain Logs" />

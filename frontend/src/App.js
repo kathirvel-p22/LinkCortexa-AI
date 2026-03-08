@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import Scanner from './pages/Scanner';
 import AdvancedScanner from './pages/AdvancedScanner';
 import Threats from './pages/Threats';
 import BlockchainLogs from './pages/BlockchainLogs';
@@ -27,8 +26,7 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
               <Route index element={<Dashboard />} />
-              <Route path="scanner" element={<Scanner />} />
-              <Route path="advanced-scanner" element={<AdvancedScanner />} />
+              <Route path="scanner" element={<AdvancedScanner />} />
               <Route path="threats" element={<Threats />} />
               <Route path="blockchain" element={<BlockchainLogs />} />
               <Route path="analytics" element={<Analytics />} />
