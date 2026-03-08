@@ -144,7 +144,7 @@ export default function Login() {
               <label style={{fontSize:12,color:'var(--text-dim)',fontFamily:'var(--font-mono)',letterSpacing:1,display:'block',marginBottom:6}}>EMAIL</label>
               <input 
                 type="email" 
-                placeholder={showAdminMode ? "admin@gmail.com" : "user@linkcortexa.ai"} 
+                placeholder={showAdminMode ? "admin@gmail.com" : "kathirvel.p2006@gmail.com"} 
                 value={form.email} 
                 onChange={e => setForm({...form,email:e.target.value})} 
                 required 
@@ -163,7 +163,7 @@ export default function Login() {
             <div style={{marginTop:20,padding:'12px',background:'rgba(0,200,255,0.06)',borderRadius:8,border:'1px solid rgba(0,200,255,0.15)'}}>
               <p style={{fontSize:11,color:'var(--text-dim)',fontFamily:'var(--font-mono)',textAlign:'center',lineHeight:1.6}}>
                 DEMO CREDENTIALS<br/>
-                user@linkcortexa.ai / password123
+                kathirvel.p2006@gmail.com / 1234567890
               </p>
             </div>
           )}

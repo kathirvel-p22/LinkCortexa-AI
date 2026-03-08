@@ -157,8 +157,8 @@ linkcortexa/
 
 | Role | Email | Password | Access Method |
 |------|-------|---------|---------------|
-| Admin | admin@gmail.com | 1234567890 | Click logo 5 times on login page |
-| User | user@linkcortexa.ai | password123 | Normal login |
+| Admin | admin@gmail.com | admin123 | Click logo 5 times on login page |
+| User | kathirvel.p2006@gmail.com | 1234567890 | Normal login |
 
 **Hidden Admin Access:** Click the "LC" logo 5 times quickly on the login page to reveal the admin login mode.
 
