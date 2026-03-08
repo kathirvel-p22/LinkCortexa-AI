@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { analyzeURL } = require('../services/threatAnalysis');
 const advancedThreatAnalysis = require('../services/advancedThreatAnalysis');
+const aiThreatDetection = require('../services/aiThreatDetection');
 const realtimeService = require('../services/realtimeService');
 const { logToBlockchain } = require('../services/blockchain');
 
@@ -31,7 +32,7 @@ if (threatStore.length === 0) threatStore = generateMockHistory();
 
 router.post('/url', async (req, res) => {
   try {
-    const { url, source = 'api', advanced = true } = req.body;
+    const { url, source = 'api', advanced = true, useAI = true } = req.body;
     if (!url) return res.status(400).json({ success: false, message: 'URL is required' });
 
     // Basic URL validation
@@ -44,10 +45,32 @@ router.post('/url', async (req, res) => {
 
     scanCount++;
     
-    // Use advanced analysis if requested
-    const result = advanced 
-      ? await advancedThreatAnalysis.analyzeURL(validURL.href)
-      : await analyzeURL(validURL.href);
+    // Use AI + Advanced analysis for best results
+    let result;
+    if (useAI && advanced) {
+      // Get AI analysis
+      const aiResult = await aiThreatDetection.analyzeURL(validURL.href);
+      
+      // Get advanced analysis
+      const advancedResult = await advancedThreatAnalysis.analyzeURL(validURL.href);
+      
+      // Combine results
+      result = {
+        ...advancedResult,
+        aiScore: aiResult.aiScore,
+        aiConfidence: aiResult.confidence,
+        aiClassification: aiResult.classification,
+        aiAnalysis: aiResult.analysis,
+        // Use weighted average of AI and advanced scores
+        riskScore: Math.round((aiResult.aiScore * 0.4) + (advancedResult.riskScore * 0.6)),
+        detectionMethods: [...(advancedResult.detectionMethods || []), 'AI Machine Learning'],
+        features: aiResult.features
+      };
+    } else if (advanced) {
+      result = await advancedThreatAnalysis.analyzeURL(validURL.href);
+    } else {
+      result = await analyzeURL(validURL.href);
+    }
 
     // Log to blockchain
     const blockchainResult = await logToBlockchain(result);
